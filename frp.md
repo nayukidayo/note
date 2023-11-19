@@ -32,3 +32,18 @@ type = "http"
 localPort = 80
 subdomain = "web-01"
 ```
+
+```ini
+# /etc/systemd/system/frpc.service
+[Unit]
+Description = frp client
+After = network.target syslog.target
+Wants = network.target
+
+[Service]
+Type = simple
+ExecStart = /opt/frp/frpc -c /opt/frp/frpc.toml
+
+[Install]
+WantedBy = multi-user.target
+```
