@@ -15,6 +15,7 @@ func main() {
 	log.Fatalln(http.ListenAndServe(":3000", nil))
 }
 
+// SSE
 func handleLive() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/event-stream")
@@ -27,7 +28,7 @@ func handleLive() http.HandlerFunc {
 			w.Write([]byte("event: "))
 			w.Write([]byte("hi"))
 			w.Write([]byte("\n"))
-			
+
 			w.Write([]byte("data: "))
 			w.Write([]byte("hello"))
 			w.Write([]byte("\n\n"))
@@ -39,6 +40,7 @@ func handleLive() http.HandlerFunc {
 	}
 }
 
+// SPA
 func handleFS() http.HandlerFunc {
 	dist, _ := ui.DistFS()
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -56,6 +58,7 @@ func handleFS() http.HandlerFunc {
 	}
 }
 
+// CORS
 func cors(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if origin := r.Header.Get("Origin"); origin != "" {
