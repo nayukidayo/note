@@ -10,7 +10,50 @@ import (
 
 func main() {
 	http.HandleFunc("/api", cors(api))
+	http.HandleFunc("GET /live", handleLive())
+	http.HandleFunc("GET /{file...}", handleFS())
 	log.Fatalln(http.ListenAndServe(":3000", nil))
+}
+
+func handleLive() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/event-stream")
+		w.Header().Set("Cache-Control", "no-cache")
+		w.Header().Set("X-Accel-Buffering", "no")
+
+		rc := http.NewResponseController(w)
+
+		for range 10 {
+			w.Write([]byte("event: "))
+			w.Write([]byte("hi"))
+			w.Write([]byte("\n"))
+			
+			w.Write([]byte("data: "))
+			w.Write([]byte("hello"))
+			w.Write([]byte("\n\n"))
+
+			if err := rc.Flush(); err != nil {
+				break
+			}
+		}
+	}
+}
+
+func handleFS() http.HandlerFunc {
+	dist, _ := ui.DistFS()
+	return func(w http.ResponseWriter, r *http.Request) {
+		var cc string
+		f, err := dist.Open(r.PathValue("file"))
+		if err == nil {
+			f.Close()
+			cc = "max-age=1209600, stale-while-revalidate=86400"
+		} else {
+			r.URL.Path = "/"
+			cc = "no-cache"
+		}
+		w.Header().Set("Cache-Control", cc)
+		http.FileServerFS(dist).ServeHTTP(w, r)
+	}
 }
 
 func cors(next http.HandlerFunc) http.HandlerFunc {
